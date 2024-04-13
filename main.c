@@ -415,9 +415,7 @@ int main(void) {
 	while (checkWin(cardCount) == false) {			//allows play while no one has won
 
 		//easiest way I could think to do the reverse
-		printf("HERE\n");
-		printf("\033[2J\033[1;1H");
-		system("cls");
+		system("cls"); //clears the console for each players when its their turn
 		if (reverse == false) {
 			currPlayer++;
 		}
