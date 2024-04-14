@@ -9,7 +9,7 @@
       "stopAtEntry": false,
       "externalConsole": true,
       "cwd": "c:/Users/andga/OneDrive - University of Arizona/SFWE401_Project",
-      "program": "c:/Users/andga/OneDrive - University of Arizona/SFWE401_Project/build/Debug/outDebug",
+      "program": "c:/Users/andga/OneDrive - University of Arizona/SFWE401_Project/main.exe",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

@@ -4,6 +4,15 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdbool.h>
+//#include <windows.h>
+
+
+#define NUM_RANDOM_BYTES 16 // Adjust as needed for your application
+#define DECK_SIZE 108 // Assuming DECK_SIZE is defined somewhere
+
+
+
+
 
 // structure to define a new variable of type card
 typedef struct card_s {
@@ -91,18 +100,47 @@ void setup_special() {
 		currCard++;
 	}
 }
+// Generate secure random bytes using the operating system's entropy source
+// Simple hash function for mixing data
+unsigned int hash(unsigned int input) {
+    // Simple XOR-based hash function
+    input ^= (input << 13);
+    input ^= (input >> 17);
+    input ^= (input << 5);
+    return input;
+}
 
-// randomizes the deck
+// Generate a seed for srand using system time, hash values, and other sources of entropy
+unsigned int generate_srand_seed() {
+    // Seed with system time
+    unsigned int seed = (unsigned int)time(NULL);
+
+    // Optionally, include other sources of entropy, such as process ID, memory addresses, etc.
+    seed ^= (unsigned int)&seed;
+    seed ^= (unsigned int)&generate_srand_seed;
+
+    // Mix in hash values derived from system-specific data
+    // Example: Include process ID
+    seed = hash(seed ^ (unsigned int)getpid());
+    // Add more data as needed
+
+    return seed;
+}
+
+// Randomize the deck of cards using srand and rand
 void randomize_deck() {
-	srand(time(NULL));
+    unsigned int seed = generate_srand_seed();
+    srand(seed);
 
-	for (int i = 0; i < 216; i++) {
-		int random1 = rand() % 108;
-		int random2 = rand() % 108;
-		card temp = deck[random1];
-		deck[random1] = deck[random2];
-		deck[random2] = temp;
-	}
+    for (int i = 0; i < DECK_SIZE; i++) {
+        int random1 = rand() % DECK_SIZE;
+        int random2 = rand() % DECK_SIZE;
+        // Assuming `deck` is defined somewhere
+        // and `card` is a typedef or struct definition
+        card temp = deck[random1];
+        deck[random1] = deck[random2];
+        deck[random2] = temp;
+    }
 }
 
 //if/else for our deck or file
@@ -118,6 +156,7 @@ void shuffleOrLoad(int input) {
 		randomize_deck();
 		currCard = 0; // resets back to the top of the deck
 		printf("The deck is shuffled.\n");
+		printf("Here");
 	}
 	else if (input == 2) {
 		FILE* input = NULL;
