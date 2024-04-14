@@ -3,7 +3,9 @@
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <stdbool.h> 
+#include "openssl/rand.h"
+
 //#include <windows.h>
 
 
@@ -110,36 +112,26 @@ unsigned int hash(unsigned int input) {
     return input;
 }
 
-// Generate a seed for srand using system time, hash values, and other sources of entropy
-unsigned int generate_srand_seed() {
-    // Seed with system time
-    unsigned int seed = (unsigned int)time(NULL);
 
-    // Optionally, include other sources of entropy, such as process ID, memory addresses, etc.
-    seed ^= (unsigned int)&seed;
-    seed ^= (unsigned int)&generate_srand_seed;
 
-    // Mix in hash values derived from system-specific data
-    // Example: Include process ID
-    seed = hash(seed ^ (unsigned int)getpid());
-    // Add more data as needed
 
-    return seed;
-}
+void randomize_deck(card *deck) {
+    unsigned char random_data[DECK_SIZE]; // Buffer for random data
+    card temp; // Temporary variable for swapping
 
-// Randomize the deck of cards using srand and rand
-void randomize_deck() {
-    unsigned int seed = generate_srand_seed();
-    srand(seed);
+    // Generate secure random data using OpenSSL
+    if (RAND_bytes(random_data, DECK_SIZE) != 1) {
+        fprintf(stderr, "Error: Unable to generate random data.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    for (int i = 0; i < DECK_SIZE; i++) {
-        int random1 = rand() % DECK_SIZE;
-        int random2 = rand() % DECK_SIZE;
-        // Assuming `deck` is defined somewhere
-        // and `card` is a typedef or struct definition
-        card temp = deck[random1];
-        deck[random1] = deck[random2];
-        deck[random2] = temp;
+    // Fisher-Yates shuffle algorithm
+    for (int i = DECK_SIZE - 1; i > 0; i--) {
+        int j = random_data[i] % (i + 1); // Choose a random index from 0 to i
+        // Swap deck[i] and deck[j]
+        temp = deck[j];
+        deck[j] = deck[i];
+        deck[i] = temp;
     }
 }
 
@@ -156,7 +148,6 @@ void shuffleOrLoad(int input) {
 		randomize_deck();
 		currCard = 0; // resets back to the top of the deck
 		printf("The deck is shuffled.\n");
-		printf("Here");
 	}
 	else if (input == 2) {
 		FILE* input = NULL;
