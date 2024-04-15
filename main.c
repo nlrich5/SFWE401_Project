@@ -6,7 +6,14 @@
 #include <stdbool.h> 
 
 
+<<<<<<< HEAD
 
+=======
+//#include <windows.h>
+
+
+#define NUM_RANDOM_BYTES 16 // Adjust as needed for your application
+>>>>>>> 31880e84a3ffa05133b5425cafd95bc7d8262363
 #define DECK_SIZE 108 // Assuming DECK_SIZE is defined somewhere
 
 
