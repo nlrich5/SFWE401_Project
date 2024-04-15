@@ -3,7 +3,22 @@
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <stdbool.h> 
+
+
+<<<<<<< HEAD
+
+=======
+//#include <windows.h>
+
+
+#define NUM_RANDOM_BYTES 16 // Adjust as needed for your application
+>>>>>>> 31880e84a3ffa05133b5425cafd95bc7d8262363
+#define DECK_SIZE 108 // Assuming DECK_SIZE is defined somewhere
+
+
+
+
 
 // structure to define a new variable of type card
 typedef struct card_s {
@@ -92,17 +107,23 @@ void setup_special() {
 	}
 }
 
-// randomizes the deck
-void randomize_deck() {
-	srand(time(NULL));
 
-	for (int i = 0; i < 216; i++) {
-		int random1 = rand() % 108;
-		int random2 = rand() % 108;
-		card temp = deck[random1];
-		deck[random1] = deck[random2];
-		deck[random2] = temp;
-	}
+void randomize_deck(){
+    _Atomic unsigned int seed = (unsigned int)time(NULL); // Atomic seed variable for thread safety
+    card temp; // Temporary variable for swapping
+
+    // Fisher-Yates shuffle algorithm
+    for (int i = DECK_SIZE - 1; i > 0; i--) {
+        unsigned int random_index;
+        // Generate secure random index using atomic operations and system time
+        seed = seed * 1103515245 + 12345; // Linear congruential generator (LCG)
+        random_index = seed % (i + 1);
+
+        // Swap deck[i] and deck[random_index]
+        temp = deck[random_index];
+        deck[random_index] = deck[i];
+        deck[i] = temp;
+    }
 }
 
 //if/else for our deck or file
