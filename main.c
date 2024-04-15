@@ -471,6 +471,7 @@ int main(void) {
 
 		if (currDiscard == (107 - numCardsInHands)) {
 			reshuffle(currDiscard);
+			currCard = 0;
 		}
 	}
 
