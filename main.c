@@ -32,7 +32,9 @@ typedef struct card_s {
 card deck[108];
 int currCard = 0;
 int currDiscard = 0;
-int playerNum, currPlayer = 1;
+int numCardsInHands = 0;
+int playerNum = -1;
+int currPlayer = 1;
 
 //where colors are stored
 char red[7] = "red";
@@ -128,7 +130,20 @@ void randomize_deck(){
 
 //if/else for our deck or file
 void shuffleOrLoad(int input) {
-	if (input == 1) {
+	if (input == 2) {
+		FILE* input = NULL;
+		char userFile[50];
+		while (input == NULL) {
+			printf("Enter the file name: ");
+			scanf("%s", userFile);
+			input = fopen(userFile, "r");
+		}
+		for (int i = 0; i < 108; i++) {
+			fscanf(userFile, "%d %s %s", &deck[i].value, deck[i].color, deck[i].action);
+			fscanf(userFile, "%*c");
+		}
+	}
+	else {
 		// Code for when a new deck is shuffled instead of loaded
 		setup_color(red);
 		setup_color(yellow);
@@ -140,20 +155,15 @@ void shuffleOrLoad(int input) {
 		currCard = 0; // resets back to the top of the deck
 		printf("The deck is shuffled.\n");
 	}
-	else if (input == 2) {
-		FILE* input = NULL;
-		char userFile[50];
-		printf("Enter the file name: ");
-		scanf("%s", userFile);
-		fopen(userFile, "r");
-		for (int i = 0; i < 108; i++) {
-			fscanf(userFile, "%d %s %s", &deck[i].value, deck[i].color, deck[i].action);
-			fscanf(userFile, "%*c");
-		}
-	}
-	else {
-		printf("Invalid input\n");
-		return;
+}
+
+void reshuffle(int discardCount) {
+	for (int i = 0; i < (discardCount * 2); i++) {
+		int random1 = rand() % discardCount;
+		int random2 = rand() % discardCount;
+		card temp = deck[random1];
+		deck[random1] = deck[random2];
+		deck[random2] = temp;
 	}
 }
 
@@ -356,15 +366,45 @@ void playerTurn(card hand[][50], int cardCount[]) {
 	printf("\nPress 1-%d to play any card from your hand, or 0 to draw a card: ", cardCount[currPlayer - 1]);
 	scanf("%d", &userInput);
 
-	while (userInput > 0) {						//loop to ensure the player plays a valid card
-		if (checkValidMove(deck[currDiscard], hand[currPlayer - 1][userInput - 1]) == true) {
+	bool canPlay = false;
+	while (userInput >= 0) {						//loop to ensure the player plays a valid card
+		if (userInput == 0) {					//drawing a card
+			if (cardCount[currPlayer - 1] >= 10) {
+				
+				for (int i = 0; i < cardCount[currPlayer - 1]; i++) {
+					if (checkValidMove(deck[currDiscard], hand[currPlayer - 1][i]) == true) {
+						canPlay = true;
+					}
+				}
+
+				if (canPlay) {
+					printf("You have enough cards. Play one from your hand.\n");
+				}
+				else {
+					hand[currPlayer - 1][cardCount[currPlayer - 1]] = deck[currCard];
+					currCard++;
+					cardCount[currPlayer - 1]++;
+					numCardsInHands++;
+					userInput = -1;
+				}
+			}
+			else {
+				hand[currPlayer - 1][cardCount[currPlayer - 1]] = deck[currCard];
+				currCard++;
+				cardCount[currPlayer - 1]++;
+				numCardsInHands++;
+				userInput = -1;
+			}
+		}
+		else if (checkValidMove(deck[currDiscard], hand[currPlayer - 1][userInput - 1]) == true) {
 			currDiscard++;
-			
+
 			deck[currDiscard] = hand[currPlayer - 1][userInput - 1];
 			for (i = (userInput - 1); i < cardCount[currPlayer - 1]; i++) {
 				hand[currPlayer - 1][i] = hand[currPlayer - 1][i + 1];
 			}
 			cardCount[currPlayer - 1]--;
+			numCardsInHands--;
 			userInput = -1;
 			cardEffect(deck[currDiscard], hand, cardCount);
 		}
@@ -382,11 +422,7 @@ void playerTurn(card hand[][50], int cardCount[]) {
 		}
 	}
 
-	if (userInput == 0) {					//drawing a card
-		hand[currPlayer - 1][cardCount[currPlayer - 1]] = deck[currCard];
-		currCard++;
-		cardCount[currPlayer - 1]++;
-	}
+	
 
 	//checks at the end of each player's turn if they have UNO and prints it
 	if (checkUno(cardCount) == true) {
@@ -405,11 +441,17 @@ int main(void) {
 	shuffleOrLoad(userShuffle);
 
 	//setting up player counter
-	printf("Enter the number of players: ");
-	scanf("%d", &playerNum);
+	while ((playerNum > 6) || (playerNum < 2)) {
+		printf("Enter the number of players: ");
+		scanf("%d", &playerNum);
+
+		if ((playerNum > 6) || (playerNum < 2)) {
+			printf("Please enter a valid number of players (2-6)\n");
+		}
+	}
 
 	//creating the hands
-	card hands[10][50];
+	card hands[6][50];
 
 	//creating an array to store how many cards each player has
 	int cardCount[10];
@@ -420,6 +462,7 @@ int main(void) {
 	//distributing the cards and placing the first discard card
 	distributeHands(playerNum, hands);
 	deck[0] = deck[currCard];
+	numCardsInHands = playerNum * 7;
 
 	//prints the setup to the game
 	printf("First card: ");
@@ -436,7 +479,7 @@ int main(void) {
 	while (checkWin(cardCount) == false) {			//allows play while no one has won
 
 		//easiest way I could think to do the reverse
-		system("cls"); //clears the console for each players when its their turn
+		system("cls");
 		if (reverse == false) {
 			currPlayer++;
 		}
@@ -447,6 +490,10 @@ int main(void) {
 		check_currPlayer();
 		playerTurn(hands, cardCount);
 
+		if (currDiscard == (107 - numCardsInHands)) {
+			reshuffle(currDiscard);
+			currCard = 0;
+		}
 	}
 
 	//final print for the winner
